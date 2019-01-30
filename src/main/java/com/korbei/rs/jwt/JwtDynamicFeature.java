@@ -51,6 +51,7 @@ public class JwtDynamicFeature implements DynamicFeature {
         // RolesAllowed on the class takes precedence over PermitAll
         roles = resourceInfo.getResourceClass().getAnnotation(RolesAllowed.class);
         if (roles != null) {
+            context.register(new AuthenticationFilter());
             context.register(new AuthorizationFilter(roles.value()));
         }
     }
