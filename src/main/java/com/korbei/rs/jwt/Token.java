@@ -19,8 +19,9 @@ import java.util.Optional;
 
 public class Token {
     private static Algorithm algorithm;
-    private static String issuer;
     private static JWTVerifier verifier;
+    private static String issuer;
+    private static String[] audience;
 
     static {
         final Instance<JwtConfigurationProvider> sInstance = CDI.current().select(JwtConfigurationProvider.class);
@@ -37,8 +38,11 @@ public class Token {
         final Optional<Long> leeway = settingsProvider.getAcceptLeeway();
         algorithm = settingsProvider.getAlgorithm();
         issuer = settingsProvider.getIssuer();
+        audience = settingsProvider.getAudience();
+
         verifier = JWT.require(algorithm)
                 .withIssuer(issuer)
+                .withAudience(audience)
                 .acceptLeeway(leeway.orElse(0L))
                 .build();
 
@@ -91,106 +95,254 @@ public class Token {
                     .withIssuedAt(new Date());
         }
 
+        /**
+         * Add specific Claims to set as the Header.
+         *
+         * @param headerClaims the values to use as Claims in the token's Header.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withHeader(Map<String, Object> headerClaims) {
             builder.withHeader(headerClaims);
             return this;
         }
 
+        /**
+         * Add a specific Key Id ("kid") claim to the Header.
+         * If the {@link Algorithm} used to sign this token was instantiated with a KeyProvider, the 'kid' value will be taken from that provider and this one will be ignored.
+         *
+         * @param keyId the Key Id value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withKeyId(String keyId) {
             builder.withKeyId(keyId);
             return this;
         }
 
+        /**
+         * Add a specific Issuer ("iss") claim to the Payload.
+         *
+         * @param issuer the Issuer value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withIssuer(String issuer) {
             builder.withIssuer(issuer);
             return this;
         }
 
+        /**
+         * Add a specific Subject ("sub") claim to the Payload.
+         *
+         * @param subject the Subject value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withSubject(String subject) {
             builder.withSubject(subject);
             return this;
         }
 
+        /**
+         * Add a specific Audience ("aud") claim to the Payload.
+         *
+         * @param audience the Audience value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withAudience(String... audience) {
             builder.withAudience(audience);
             return this;
         }
 
+        /**
+         * Add a specific Expires At ("exp") claim to the Payload.
+         *
+         * @param expiresAt the Expires At value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withExpiresAt(Date expiresAt) {
             builder.withExpiresAt(expiresAt);
             return this;
         }
 
+        /**
+         * Add a specific Not Before ("nbf") claim to the Payload.
+         *
+         * @param notBefore the Not Before value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withNotBefore(Date notBefore) {
             builder.withNotBefore(notBefore);
             return this;
         }
 
+        /**
+         * Add a specific Issued At ("iat") claim to the Payload.
+         *
+         * @param issuedAt the Issued At value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withIssuedAt(Date issuedAt) {
             builder.withIssuedAt(issuedAt);
             return this;
         }
 
+        /**
+         * Add a specific JWT Id ("jti") claim to the Payload.
+         *
+         * @param jwtId the Token Id value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withJWTId(String jwtId) {
             builder.withJWTId(jwtId);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, Boolean value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, Integer value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, Long value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, Double value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, String value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a custom Claim value.
+         *
+         * @param name  the Claim's name.
+         * @param value the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withClaim(String name, Date value) throws IllegalArgumentException {
             builder.withClaim(name, value);
             return this;
         }
 
+        /**
+         * Add a specific roles ("roles") claim to the Payload.
+         *
+         * @param roles the roles value.
+         * @return this same Builder instance.
+         */
         public TokenBuilder withRoles(String... roles) throws IllegalArgumentException {
             Objects.requireNonNull(roles, "Roles can't be null!");
             builder.withArrayClaim(Const.CLAIM_ROLES, roles);
             return this;
         }
 
+        /**
+         * Add a custom Array Claim with the given items.
+         *
+         * @param name  the Claim's name.
+         * @param items the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withArrayClaim(String name, String[] items) throws IllegalArgumentException {
             builder.withArrayClaim(name, items);
             return this;
         }
 
+        /**
+         * Add a custom Array Claim with the given items.
+         *
+         * @param name  the Claim's name.
+         * @param items the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withArrayClaim(String name, Integer[] items) throws IllegalArgumentException {
             builder.withArrayClaim(name, items);
             return this;
         }
 
+        /**
+         * Add a custom Array Claim with the given items.
+         *
+         * @param name  the Claim's name.
+         * @param items the Claim's value.
+         * @return this same Builder instance.
+         * @throws IllegalArgumentException if the name is null.
+         */
         public TokenBuilder withArrayClaim(String name, Long[] items) throws IllegalArgumentException {
             builder.withArrayClaim(name, items);
             return this;
         }
 
+        /**
+         * Creates a new JWT and signs is with the given algorithm
+         *
+         * @param algorithm used to sign the JWT
+         * @return a new JWT token
+         * @throws IllegalArgumentException if the provided algorithm is null.
+         * @throws JWTCreationException     if the claims could not be converted to a valid JSON or there was a problem with the signing key.
+         */
         public String sign(Algorithm algorithm) throws IllegalArgumentException, JWTCreationException {
             return builder.sign(algorithm);
         }
 
+        /**
+         * Creates a new JWT and signs is with the algorithm provided by <code>{@link JwtConfigurationProvider}</code>
+         *
+         * @return a new JWT token
+         * @throws IllegalArgumentException if the provided algorithm is null.
+         * @throws JWTCreationException     if the claims could not be converted to a valid JSON or there was a problem with the signing key.
+         */
         public String sign() throws IllegalArgumentException, JWTCreationException {
             return builder.sign(algorithm);
         }

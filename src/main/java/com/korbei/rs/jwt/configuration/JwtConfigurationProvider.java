@@ -19,10 +19,16 @@ public interface JwtConfigurationProvider {
     Algorithm getAlgorithm();
 
     /**
-     * Get the issuer.
+     * Identifies the JWT token issuer.
      * @return the issuer
      */
     String getIssuer();
+
+    /**
+     * Identifies the recipients that the JWT token is intended for.
+     * @return the audience
+     */
+    String[] getAudience();
 
     /**
      * Define the default window in seconds in which the Not Before, Issued At and Expires At Claims will still be valid.
