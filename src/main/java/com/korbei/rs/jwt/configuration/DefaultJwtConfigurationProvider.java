@@ -37,11 +37,6 @@ public class DefaultJwtConfigurationProvider implements JwtConfigurationProvider
     }
 
     @Override
-    public String[] getAudience() {
-        return new String[]{"easy-jwt"};
-    }
-
-    @Override
     public String getIssuer() {
         return "easy-jwt";
     }

@@ -28,7 +28,9 @@ public interface JwtConfigurationProvider {
      * Identifies the recipients that the JWT token is intended for.
      * @return the audience
      */
-    String[] getAudience();
+    default Optional<String[]> getAudience() {
+        return Optional.empty();
+    }
 
     /**
      * Define the default window in seconds in which the Not Before, Issued At and Expires At Claims will still be valid.

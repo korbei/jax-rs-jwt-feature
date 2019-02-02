@@ -8,6 +8,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.interfaces.Verification;
 import com.korbei.rs.jwt.configuration.JwtConfigurationProvider;
 
 import javax.enterprise.inject.Instance;
@@ -21,7 +22,7 @@ public class Token {
     private static Algorithm algorithm;
     private static JWTVerifier verifier;
     private static String issuer;
-    private static String[] audience;
+    private static Optional<String[]> audience;
 
     static {
         final Instance<JwtConfigurationProvider> sInstance = CDI.current().select(JwtConfigurationProvider.class);
@@ -40,11 +41,15 @@ public class Token {
         issuer = settingsProvider.getIssuer();
         audience = settingsProvider.getAudience();
 
-        verifier = JWT.require(algorithm)
+        Verification verification = JWT.require(algorithm)
                 .withIssuer(issuer)
-                .withAudience(audience)
-                .acceptLeeway(leeway.orElse(0L))
-                .build();
+                .acceptLeeway(leeway.orElse(0L));
+
+        if(audience.isPresent()) {
+            verification = verification.withAudience(audience.get());
+        }
+
+        verifier = verification.build();
 
         sInstance.destroy(settingsProvider);
     }
@@ -84,7 +89,7 @@ public class Token {
     }
 
     /**
-     * Wrapper class of JWTCreator.Builder
+     * Wrapper class for JWTCreator.Builder
      */
     public static class TokenBuilder {
         private JWTCreator.Builder builder;
@@ -92,6 +97,7 @@ public class Token {
         private TokenBuilder() {
             builder = JWT.create()
                     .withIssuer(issuer)
+                    .withAudience(audience.orElse(null))
                     .withIssuedAt(new Date());
         }
 

@@ -11,16 +11,16 @@ import java.util.Optional;
 
 @EnableAutoWeld
 @AddPackages(DefaultJwtConfigurationProvider.class)
-public class DefaultJwtConfigurationProviderTest {
+class DefaultJwtConfigurationProviderTest {
 
     @Inject @Any
     JwtConfigurationProvider provider;
 
     @Test
-    public void defaultConfigurationTest() {
+    void defaultConfigurationTest() {
         Assertions.assertEquals(Optional.empty(), provider.getAcceptLeeway());
         Assertions.assertEquals("easy-jwt", provider.getIssuer());
-        Assertions.assertArrayEquals(new String[]{"easy-jwt"}, provider.getAudience());
+        Assertions.assertEquals(Optional.empty(), provider.getAudience());
         Assertions.assertEquals("RS256", provider.getAlgorithm().getName());
     }
 }

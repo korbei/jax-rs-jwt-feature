@@ -46,13 +46,21 @@ public class JwtDynamicFeature implements DynamicFeature {
             return;
         }
 
+        final Class<?> resourceClass = resourceInfo.getResourceClass();
+
         // DenyAll can't be attached to classes
 
         // RolesAllowed on the class takes precedence over PermitAll
-        roles = resourceInfo.getResourceClass().getAnnotation(RolesAllowed.class);
+        roles = resourceClass.getAnnotation(RolesAllowed.class);
         if (roles != null) {
             context.register(new AuthenticationFilter());
             context.register(new AuthorizationFilter(roles.value()));
+            return;
+        }
+
+        // @PermitAll on the class
+        if (resourceClass.isAnnotationPresent(PermitAll.class)) {
+            context.register(new AuthenticationFilter());
         }
     }
 
@@ -128,7 +136,6 @@ public class JwtDynamicFeature implements DynamicFeature {
             }
 
             throw new ForbiddenException(Const.JWT_AUTH_SCHEME);
-
         }
 
         private static boolean isAuthenticated(final ContainerRequestContext requestContext) {
