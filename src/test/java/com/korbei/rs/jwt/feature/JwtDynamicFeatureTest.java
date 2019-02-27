@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 
 import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -62,6 +63,48 @@ class JwtDynamicFeatureTest {
 
     @Test
     void permitAllTest() {
+        when(resourceInfo.getResourceMethod().isAnnotationPresent(PermitAll.class)).thenReturn(true);
+
+        jwtDynamicFeature.configure(resourceInfo, context);
+
+        verify(context, times(1)).register(ArgumentMatchers.any(ContainerRequestFilter.class));
+    }
+
+    @Test
+    void rolesAllowedOnClassTest() throws NoSuchFieldException, IllegalAccessException {
+        doReturn(mock(Foo.class).getClass()).when(resourceInfo).getResourceClass();
+
+        final ArgumentCaptor<ContainerRequestFilter> allowedArgumentCaptor = ArgumentCaptor.forClass(ContainerRequestFilter.class);
+
+        jwtDynamicFeature.configure(resourceInfo, context);
+        verify(context, times(2)).register(allowedArgumentCaptor.capture());
+
+        final AuthorizationFilter authorizationFilter = (AuthorizationFilter)allowedArgumentCaptor.getAllValues().get(1);
+        final Field rolesAllowedField = AuthorizationFilter.class.getDeclaredField("rolesAllowed");
+        rolesAllowedField.setAccessible(true);
+
+        final String[] roles = (String[]) rolesAllowedField.get(authorizationFilter);
+
+        Assertions.assertEquals("admin", roles[0]);
+        Assertions.assertEquals("user", roles[1]);
+    }
+
+    @Test
+    void permitAllOnClassTest() {
+        doReturn(mock(Bar.class).getClass()).when(resourceInfo).getResourceClass();
+
+        jwtDynamicFeature.configure(resourceInfo, context);
+
+        verify(context, times(1)).register(ArgumentMatchers.any(ContainerRequestFilter.class));
+    }
+
+    @RolesAllowed({"admin", "user"})
+    private class Foo {
+
+    }
+
+    @PermitAll
+    private class Bar {
 
     }
 }
