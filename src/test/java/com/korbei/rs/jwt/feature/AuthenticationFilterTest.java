@@ -7,7 +7,7 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.mockito.ArgumentCaptor;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -24,11 +24,11 @@ import static org.mockito.Mockito.*;
 @AddPackages(Token.class)
 class AuthenticationFilterTest {
 
-    ContainerRequestContext ctx = mock(ContainerRequestContext.class);
-    AuthenticationFilter authenticationFilter = new AuthenticationFilter();
+    private ContainerRequestContext ctx = mock(ContainerRequestContext.class);
+    private AuthenticationFilter authenticationFilter = new AuthenticationFilter();
 
     @BeforeEach
-    public void init() {
+    void init() {
         final Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.MINUTE, 1);
@@ -49,17 +49,27 @@ class AuthenticationFilterTest {
     @Test
     void filter() throws IOException {
         authenticationFilter.filter(ctx);
-        verify(ctx).setSecurityContext(ArgumentMatchers.any(SecurityContext.class));
+
+        final ArgumentCaptor<SecurityContext> securityContextCaptor = ArgumentCaptor.forClass(SecurityContext.class);
+
+        verify(ctx).setSecurityContext(securityContextCaptor.capture());
+
+        final SecurityContext securityContext = securityContextCaptor.getValue();
+
+        Assertions.assertTrue(securityContext.isUserInRole("admin"));
+        Assertions.assertTrue(securityContext.isSecure());
+        Assertions.assertEquals("korbei", securityContext.getUserPrincipal().getName());
+        Assertions.assertEquals(Const.JWT_AUTH_SCHEME, securityContext.getAuthenticationScheme());
     }
 
     @Test
-    void missingAuthorizationHeader() {
+    void missingAuthorizationHeaderTest() {
         when(ctx.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(null);
         Assertions.assertThrows(NotAuthorizedException.class, () -> authenticationFilter.filter(ctx));
     }
 
     @Test
-    void invalidToken() {
+    void invalidTokenTest() {
         final String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJrb3JiZWkiLCJyb2xlcyI6WyJhZG1pbiIsInVzZXIiXSwi" +
                 "aXNzIjoiZWFzeS1qd3QiLCJleHAiOjE1NDkxMTEzNjYsImlhdCI6MTU0OTExMTM2Nn0.Pu_zFVzDOfbbDAFZfEo-rsOGgolYtF8c" +
                 "zHfJTx_RX7m6MYF2p3A0np-NPQty-Tf5lZvAQ0NBlu99O6MGXByg3yCU4nal3Ix7FfZhdzaNiVSQXpXVnKW3x3-Lj3_14NUVmO9c" +
