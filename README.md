@@ -17,4 +17,28 @@ Add the following maven dependency to your project
   <version>1.0-SNAPSHOT</version>
 </dependency>
 ```
+Register the feature
+```java
+@ApplicationPath("/api")
+public class App extends Application {
+
+    @Override
+    public Set<Class<?>> getClasses() {
+        final Set<Class<?>> classes = new HashSet<>();
+        ...
+        classes.add(JwtDynamicFeature.class);
+        return classes;
+    }
+}
+```
+Securing your REST endpoints with JSR-250 annotations such as 
+- [`@RolesAllowed`](https://docs.oracle.com/javaee/7/api/javax/annotation/security/RolesAllowed.html)
+- [`@PermitAll`](https://docs.oracle.com/javaee/7/api/javax/annotation/security/PermitAll.html)
+- [`@DenyAll`](https://docs.oracle.com/javaee/7/api/javax/annotation/security/DenyAll.html)
+> Resource methods (or classes) without security annotation are exposed as public endpoints
+
+Overwrite the DefaultJwtConfigurationProvider
+
+Generating token
+
 TODO
