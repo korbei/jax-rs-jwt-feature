@@ -1,5 +1,6 @@
 # jax-rs-jwt-feature 
 [![Build Status](https://travis-ci.com/korbei/jax-rs-jwt-feature.svg?branch=master)](https://travis-ci.com/korbei/jax-rs-jwt-feature)
+[![codecov](https://codecov.io/gh/korbei/jax-rs-jwt-feature/branch/master/graph/badge.svg)](https://codecov.io/gh/korbei/jax-rs-jwt-feature)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/korbei/jax-rs-jwt-feature/blob/master/LICENSE)
 
 # Usage
