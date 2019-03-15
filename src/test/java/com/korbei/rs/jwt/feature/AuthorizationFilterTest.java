@@ -49,7 +49,7 @@ class AuthorizationFilterTest {
     }
 
     @Test
-    void rolesNotAllowedTest() throws IOException {
+    void rolesNotAllowedTest() {
         when(ctx.getSecurityContext().isUserInRole("admin")).thenReturn(false);
         when(ctx.getSecurityContext().isUserInRole("user")).thenReturn(false);
         AuthorizationFilter filter = new AuthorizationFilter(new String[]{"admin", "user"});

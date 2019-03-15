@@ -4,6 +4,8 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.korbei.rs.jwt.Const;
 import com.korbei.rs.jwt.Token;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Priority;
 import javax.ws.rs.NotAuthorizedException;
@@ -12,19 +14,19 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
-import java.security.Principal;
 
 @PreMatching
 @Priority(Priorities.AUTHENTICATION)
 class AuthenticationFilter implements ContainerRequestFilter {
+    private static final Logger LOG = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
         final String authorizationHeader = ctx.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         if(authorizationHeader == null || !authorizationHeader.startsWith(Const.JWT_AUTH_SCHEME)) {
+            LOG.error("Missing Authorization header!");
             throw new NotAuthorizedException(Const.JWT_AUTH_SCHEME);
         }
 
@@ -33,31 +35,9 @@ class AuthenticationFilter implements ContainerRequestFilter {
             final DecodedJWT decodedJWT = Token.verify(token);
             final boolean isSecure = ctx.getSecurityContext().isSecure();
 
-            ctx.setSecurityContext(new SecurityContext() {
-                @Override
-                public Principal getUserPrincipal() {
-                    return decodedJWT::getSubject;
-                }
-
-                @Override
-                public boolean isUserInRole(String role) {
-                    return decodedJWT
-                            .getClaim(Const.CLAIM_ROLES)
-                            .asList(String.class)
-                            .contains(role);
-                }
-
-                @Override
-                public boolean isSecure() {
-                    return isSecure;
-                }
-
-                @Override
-                public String getAuthenticationScheme() {
-                    return Const.JWT_AUTH_SCHEME;
-                }
-            });
+            ctx.setSecurityContext(new JwtSecurityContext(decodedJWT, isSecure));
         } catch (JWTVerificationException e) {
+            LOG.error("JWTVerificationException: {}", e.getMessage());
             throw new NotAuthorizedException(Const.JWT_AUTH_SCHEME);
         }
     }

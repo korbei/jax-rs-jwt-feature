@@ -27,6 +27,7 @@ class TokenTest {
         final String[] roles = {"admin", "user"};
         final String token = Token.create()
                 .withSubject("korbei")
+                .withIssuer("easy-jwt")
                 .withRoles(roles)
                 .withExpiresAt(calendar.getTime())
                 .withIssuedAt(new Date())
@@ -34,6 +35,9 @@ class TokenTest {
                 .withJWTId(jwtId)
                 .withClaim("claim1", "stringClaim")
                 .withClaim("claim2", 1)
+                .withClaim("claim3", true)
+                .withClaim("claim4", 2L)
+                .withClaim("claim5", 3.14)
                 .sign();
 
         Assertions.assertNotNull(token);
@@ -45,17 +49,18 @@ class TokenTest {
         Assertions.assertEquals(jwtId, decodedJWT.getId());
         Assertions.assertEquals("stringClaim", decodedJWT.getClaim("claim1").as(String.class));
         Assertions.assertEquals(Integer.valueOf(1), decodedJWT.getClaim("claim2").as(Integer.class));
+        Assertions.assertTrue(decodedJWT.getClaim("claim3").as(Boolean.class));
+        Assertions.assertEquals(Long.valueOf(2), decodedJWT.getClaim("claim4").as(Long.class));
+        Assertions.assertEquals(Double.valueOf(3.14), decodedJWT.getClaim("claim5").as(Double.class));
         Assertions.assertEquals("korbei", decodedJWT.getSubject());
+        Assertions.assertEquals("easy-jwt", decodedJWT.getIssuer());
         Assertions.assertEquals("audience", decodedJWT.getAudience().get(0));
         Assertions.assertArrayEquals(roles, decodedJWT.getClaim(Const.CLAIM_ROLES).asArray(String.class));
     }
 
     @Test
     void invalidTokenTest() {
-        final String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJrb3JiZWkiLCJyb2xlcyI6WyJhZG1pbiIsInVzZXIiXSwi" +
-                "aXNzIjoiZWFzeS1qd3QiLCJleHAiOjE1NDkxMTEzNjYsImlhdCI6MTU0OTExMTM2Nn0.Pu_zFVzDOfbbDAFZfEo-rsOGgolYtF8c" +
-                "zHfJTx_RX7m6MYF2p3A0np-NPQty-Tf5lZvAQ0NBlu99O6MGXByg3yCU4nal3Ix7FfZhdzaNiVSQXpXVnKW3x3-Lj3_14NUVmO9c" +
-                "1A3_pC_IcJAUsvqeCuqYjxTFm0aVQkxWaOtP4Tk";
+        final String token = TestUtil.generateInvalidToken();
 
         Assertions.assertThrows(JWTVerificationException.class, () -> Token.verify(token));
     }
